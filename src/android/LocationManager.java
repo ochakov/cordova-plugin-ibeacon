@@ -152,7 +152,7 @@ public class LocationManager extends CordovaPlugin implements BeaconConsumer {
         }
         //TODO AddObserver when page loaded
 
-        tryToRequestMarshmallowLocationPermission();
+        // tryToRequestMarshmallowLocationPermission();
     }
 
     /**
