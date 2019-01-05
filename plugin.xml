@@ -5,7 +5,7 @@
     <description>Proximity Beacon Monitoring and Transmission Plugin (supporting iBeacons)</description>
     <license>Apache 2.0</license>
     <keywords>cordova,ibeacon,beacon,bluetooth,le</keywords>
-    <repo>https://github.com/petermetz/cordova-plugin-ibeacon.git</repo>
+    <repo>https://github.com/ochakov/cordova-plugin-ibeacon.git</repo>
 
     <!-- Version is set to anything because the only feature we use is the device.platform property which was available
     since forever. The added benefit is that we don't force the consumers of this plugin to use a certain version of
@@ -59,10 +59,13 @@
         </config-file>
 
         <config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
-            <string>This app would like to scan for iBeacons even when in the background.</string>
+            <string>This app would like to scan for iBeacons even when in the background</string>
         </config-file>
         <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
-            <string>This app would like to scan for iBeacons while it is in use.</string>
+            <string>This app would like to scan for iBeacons while it is in use</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSBluetoothPeripheralUsageDescription">
+            <string>This app would like to get bluetooth permission to scan for iBeacons</string>
         </config-file>
         <config-file target="*-Info.plist" parent="NSBluetoothPeripheralUsageDescription">
             <string>This app would like to scan for iBeacons.</string>
@@ -93,7 +96,12 @@
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest">
-			<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+		<uses-permission android:name="android.permission.BLUETOOTH" />
+		<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+		<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+		<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+		<uses-feature android:name="android.hardware.bluetooth" android:required="false" />
+		<uses-feature android:name="android.hardware.bluetooth_le" android:required="false" />
         </config-file>
 
         <source-file src="src/android/LocationManager.java" target-dir="src/com/unarin/cordova/beacon" />
