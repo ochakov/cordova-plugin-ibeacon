@@ -19,6 +19,14 @@
 
 #import "AppDelegate+CDVLocationManager.h"
 #import <objc/runtime.h>
+#import <objc/message.h>
+
+/**
+ * YES when AppDelegate itself did not implement application:didFinishLaunchingWithOptions:
+ * (cordova-ios 8: the Swift AppDelegate inherits it from CDVAppDelegate) and our method was
+ * added to the class instead of exchanged with an existing one.
+ */
+static BOOL addedToSubclass = NO;
 
 @implementation AppDelegate (CDVLocationManager)
 
@@ -38,7 +46,13 @@
         BOOL didAddMethod = class_addMethod(class, originalSelector, method_getImplementation(swizzledMethod), method_getTypeEncoding(swizzledMethod));
         
         if (didAddMethod) {
-            class_replaceMethod(class, swizzledSelector, method_getImplementation(originalMethod), method_getTypeEncoding(originalMethod));
+            // AppDelegate did not implement the selector itself, it inherited it from
+            // CDVAppDelegate (cordova-ios 8). Do not bind xxx_ to the inherited IMP as
+            // it is now: other plugins (e.g. cordova-plugin-firebasex-core) swizzle the
+            // same selector on CDVAppDelegate from their own +load, and a captured IMP
+            // would bypass whichever of them loads later. xxx_ forwards to the
+            // superclass's current implementation instead (see below).
+            addedToSubclass = YES;
         } else {
             method_exchangeImplementations(originalMethod, swizzledMethod);
         }
@@ -52,6 +66,19 @@
     
     if (!launchedWithoutOptions) {
         [self requestMoreBackgroundExecutionTime];
+    }
+    
+    if (addedToSubclass) {
+        // Dispatch to the superclass's implementation as it is at call time, so
+        // swizzles applied to CDVAppDelegate by other plugins stay in the chain.
+        SEL originalSelector = @selector(application:didFinishLaunchingWithOptions:);
+        Class superclass = class_getSuperclass([AppDelegate class]);
+        if (![superclass instancesRespondToSelector:originalSelector]) {
+            return YES;
+        }
+        struct objc_super superInfo = { self, superclass };
+        BOOL (*sendSuper)(struct objc_super *, SEL, UIApplication *, NSDictionary *) = (void *)objc_msgSendSuper;
+        return sendSuper(&superInfo, originalSelector, application, launchOptions);
     }
     
     return [self xxx_application:application didFinishLaunchingWithOptions:launchOptions];
