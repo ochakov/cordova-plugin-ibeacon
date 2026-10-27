@@ -100,10 +100,25 @@ static BOOL addedToSubclass = NO;
 
     UIApplication *application = [UIApplication sharedApplication];
 
-    self.backgroundTaskIdentifier = [application beginBackgroundTaskWithExpirationHandler:^{
-        self.backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+    // A task from an earlier launch-time call that is still running is ended first.
+    [self endBackgroundExecutionTime];
 
+    __weak typeof(self) weakSelf = self;
+    self.backgroundTaskIdentifier = [application beginBackgroundTaskWithName:@"CDVLocationManager launch" expirationHandler:^{
+        // The task has to be ended here, not just forgotten: a task that is still running
+        // after its expiration handler returned gets the app terminated ("has active
+        // assertions beyond permitted time"). That hit every launch with launch options,
+        // such as a launch by a background push or by a location event, about 30 seconds in.
+        [weakSelf endBackgroundExecutionTime];
     }];
+}
+
+- (void) endBackgroundExecutionTime {
+    UIBackgroundTaskIdentifier taskId = self.backgroundTaskIdentifier;
+    if (taskId != UIBackgroundTaskInvalid) {
+        self.backgroundTaskIdentifier = UIBackgroundTaskInvalid;
+        [[UIApplication sharedApplication] endBackgroundTask:taskId];
+    }
 }
 
 

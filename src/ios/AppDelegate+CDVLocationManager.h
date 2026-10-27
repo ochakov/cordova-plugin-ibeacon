@@ -25,4 +25,7 @@
 
 - (BOOL) xxx_application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions;
 
+/** Ends the background task begun by requestMoreBackgroundExecutionTime, if one is still running. */
+- (void) endBackgroundExecutionTime;
+
 @end
